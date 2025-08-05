@@ -5,13 +5,13 @@ echo "🟢 Starting xrdp..."
 service xrdp start
 
 # Inject authtoken (make sure it's passed via env or hardcoded)
-if [ -z "$NGROK_AUTHTOKEN" ]; then
+if [ -z "30sejMsqEO8qhzhravw1Pvwxyag_68ievbzFj1gbPzW5MWjxf" ]; then
   echo "❌ NGROK_AUTHTOKEN not set. Set it as env variable or hardcode it below."
   exit 1
 fi
 
 echo "🔐 Adding ngrok authtoken..."
-ngrok config add-authtoken $NGROK_AUTHTOKEN
+ngrok config add-authtoken 30sejMsqEO8qhzhravw1Pvwxyag_68ievbzFj1gbPzW5MWjxf
 
 # Start ngrok TCP tunnel on port 3389
 echo "🚀 Starting ngrok tunnel..."
