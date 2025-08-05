@@ -1,37 +1,37 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install tools & desktop
-RUN apt update && apt install -y \
-    software-properties-common \
+# Update and install essentials
+RUN apt-get update && apt-get install -y \
     sudo \
     curl \
     wget \
     nano \
-    unzip \
     net-tools \
-    xrdp \
-    xfce4 \
-    xfce4-goodies \
+    unzip \
+    software-properties-common \
     dbus-x11 \
-    && apt clean && rm -rf /var/lib/apt/lists/*
+    xfce4 \
+    xrdp && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Add default user
+# Create default user (username: ubuntu / password: ubuntu)
 RUN useradd -m ubuntu && echo "ubuntu:ubuntu" | chpasswd && adduser ubuntu sudo
 
-# Configure xsession
+# Configure XRDP to use XFCE
 RUN echo "xfce4-session" > /home/ubuntu/.xsession && \
     chown ubuntu:ubuntu /home/ubuntu/.xsession
 
-# Install ngrok
-RUN curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && \
-    echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list && \
-    apt update && apt install -y ngrok && rm -rf /var/lib/apt/lists/*
+# Install latest ngrok v3
+RUN wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.deb && \
+    dpkg -i ngrok-v3-stable-linux-amd64.deb && \
+    rm ngrok-v3-stable-linux-amd64.deb
 
-# Copy and run script
+# Copy and set permissions for the run script
 COPY run.sh /run.sh
 RUN chmod +x /run.sh
 
 EXPOSE 3389
-CMD ["/run.sh"]
+
+CMD ["/run.sh"]CMD ["/run.sh"]
