@@ -1,23 +1,17 @@
 #!/bin/bash
 
-# Start XRDP
-echo "🟢 Starting xrdp..."
+echo "🟢 Starting XRDP..."
 service xrdp start
 
-# Hardcoded token — no need to check if it's empty
-echo "🔐 Adding ngrok authtoken..."
-ngrok config add-authtoken 30sejMsqEO8qhzhravw1Pvwxyag_68ievbzFj1gbPzW5MWjxf
+echo "🚀 Starting cloudflared TCP tunnel..."
+cloudflared tunnel --url tcp://localhost:3389 --no-autoupdate &
 
-# Start ngrok TCP tunnel on port 3389
-echo "🚀 Starting ngrok tunnel..."
-ngrok tcp 3389 > /dev/null &
+# Give tunnel time to connect
+sleep 6
 
-# Wait for ngrok to boot
-sleep 5
+# Display the tunnel info
+echo "🔗 Public RDP address (watch cloudflared output above or in logs):"
+curl -s http://localhost:4040/api/tunnels || echo "⏳ Still initializing..."
 
-# Show public RDP link
-echo "🔗 Your public RDP address (via ngrok):"
-curl -s http://localhost:4040/api/tunnels | grep -oE 'tcp://[^\"]+' || echo "⏳ Ngrok not ready yet"
-
-# Keep container running
+# Keep the container alive
 tail -f /dev/null
