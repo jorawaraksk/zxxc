@@ -2,32 +2,34 @@ FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install desktop environment and tools
+# Install tools & desktop
 RUN apt update && apt install -y \
-    xfce4 \
-    xrdp \
+    software-properties-common \
     sudo \
     curl \
     wget \
     nano \
     unzip \
     net-tools \
-    firefox \
-    && apt clean
+    xrdp \
+    xfce4 \
+    xfce4-goodies \
+    dbus-x11 \
+    && apt clean && rm -rf /var/lib/apt/lists/*
 
-# Add user
+# Add default user
 RUN useradd -m ubuntu && echo "ubuntu:ubuntu" | chpasswd && adduser ubuntu sudo
 
-# Configure XRDP
+# Configure xsession
 RUN echo "xfce4-session" > /home/ubuntu/.xsession && \
     chown ubuntu:ubuntu /home/ubuntu/.xsession
 
 # Install ngrok
 RUN curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && \
     echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list && \
-    apt update && apt install ngrok -y
+    apt update && apt install -y ngrok && rm -rf /var/lib/apt/lists/*
 
-# Copy and run startup script
+# Copy and run script
 COPY run.sh /run.sh
 RUN chmod +x /run.sh
 
