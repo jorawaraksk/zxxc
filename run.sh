@@ -1,19 +1,27 @@
 #!/bin/bash
 
-echo "🟢 Starting XRDP service..."
+# Start XRDP
+echo "🟢 Starting xrdp..."
 service xrdp start
 
-sleep 2
+# Inject authtoken (make sure it's passed via env or hardcoded)
+if [ -z "$NGROK_AUTHTOKEN" ]; then
+  echo "❌ NGROK_AUTHTOKEN not set. Set it as env variable or hardcode it below."
+  exit 1
+fi
 
-echo "🚀 Launching ngrok tunnel on port 3389..."
-ngrok tcp 3389 &
+echo "🔐 Adding ngrok authtoken..."
+ngrok config add-authtoken $NGROK_AUTHTOKEN
 
-# Wait for ngrok to initialize
-sleep 6
+# Start ngrok TCP tunnel on port 3389
+echo "🚀 Starting ngrok tunnel..."
+ngrok tcp 3389 > /dev/null &
 
-# Show ngrok tunnel URL
+sleep 5
+
+# Fetch and display the public URL
 echo "🔗 Your public RDP address (via ngrok):"
-curl -s http://localhost:4040/api/tunnels | grep -oE "tcp://[0-9a-zA-Z:.]+"
+curl -s http://localhost:4040/api/tunnels | grep -oE 'tcp://[^\"]+' || echo "⏳ Ngrok not ready yet"
 
-# Keep container alive
+# Keep container running
 tail -f /dev/null
