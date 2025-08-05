@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set up ngrok token
-ngrok config add-authtoken YOUR_NGROK_AUTH_TOKEN
+ngrok config add-authtoken 30sejMsqEO8qhzhravw1Pvwxyag_68ievbzFj1gbPzW5MWjxf
 
 # Start xrdp
 service xrdp start
