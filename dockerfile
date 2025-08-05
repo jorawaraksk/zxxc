@@ -34,4 +34,4 @@ RUN chmod +x /run.sh
 
 EXPOSE 3389
 
-CMD ["/run.sh"]CMD ["/run.sh"]
+CMD ["/run.sh"]
