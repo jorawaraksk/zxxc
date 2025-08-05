@@ -23,10 +23,10 @@ RUN useradd -m ubuntu && echo "ubuntu:ubuntu" | chpasswd && adduser ubuntu sudo
 RUN echo "xfce4-session" > /home/ubuntu/.xsession && \
     chown ubuntu:ubuntu /home/ubuntu/.xsession
 
-# Install latest ngrok v3
-RUN wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.deb && \
-    dpkg -i ngrok-v3-stable-linux-amd64.deb && \
-    rm ngrok-v3-stable-linux-amd64.deb
+# Install latest ngrok v3 (via apt repo)
+RUN curl -L https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && \
+    echo "deb https://ngrok-agent.s3.amazonaws.com stable main" > /etc/apt/sources.list.d/ngrok.list && \
+    apt-get update && apt-get install -y ngrok
 
 # Copy and set permissions for the run script
 COPY run.sh /run.sh
