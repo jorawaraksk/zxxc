@@ -23,11 +23,11 @@ RUN useradd -m ubuntu && echo "ubuntu:ubuntu" | chpasswd && adduser ubuntu sudo
 RUN echo "xfce4-session" > /home/ubuntu/.xsession && \
     chown ubuntu:ubuntu /home/ubuntu/.xsession
 
-# Download and install ngrok (DEB version with proper detection)
-RUN curl -L -o ngrok.deb https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.deb && \
-    dpkg -i ngrok.deb || apt-get install -fy && rm ngrok.deb
+# ✅ FIXED: Install ngrok as binary, not .deb
+RUN curl -L https://github.com/ngrok/ngrok/releases/latest/download/ngrok-linux-amd64 -o /usr/local/bin/ngrok && \
+    chmod +x /usr/local/bin/ngrok
 
-# Add ngrok authtoken (REPLACE below before building)
+# Add ngrok authtoken (REPLACE with your actual token)
 RUN ngrok config add-authtoken 30sejMsqEO8qhzhravw1Pvwxyag_68ievbzFj1gbPzW5MWjxf
 
 # Copy startup script
