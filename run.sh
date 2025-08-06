@@ -19,25 +19,27 @@ for i in {1..10}; do
 done
 
 echo "[+] Launching Cloudflared tunnel (TCP mode)..."
-cloudflared tunnel --url tcp://localhost:3389 2>&1 | tee /tmp/cloudflared.log &
+cloudflared tunnel --url tcp://localhost:3389 --loglevel info 2>&1 | tee /tmp/cloudflared.log &
 
-echo "[+] Waiting for Cloudflared to initialize..."
-for i in {1..15}; do
-    RDP_ADDR=$(grep -oE "tcp://trycloudflare.com:[0-9]+" /tmp/cloudflared.log | head -n 1)
-    if [ -n "$RDP_ADDR" ]; then
-        echo "[✓] 🔗 Your RDP address is: $RDP_ADDR"
-        echo "[✓] Use it in your RDP client like this: ${RDP_ADDR#tcp://}"
+# Wait for the tunnel to initialize
+sleep 2
+
+# Try to extract any trycloudflare.com address (even https one)
+for i in {1..20}; do
+    RDP_DOMAIN=$(grep -oE "https://[a-z0-9-]+\.trycloudflare\.com" /tmp/cloudflared.log | head -n 1)
+    if [ -n "$RDP_DOMAIN" ]; then
+        echo "[✓] 🌐 Tunnel created: $RDP_DOMAIN"
+        echo "[🔧] Use it in your RDP client like this (add port manually after testing):"
+        echo "     trycloudflare.com:<PORT_FROM_LOG>"
         break
     else
-        echo "[-] Tunnel not ready yet... ($i)"
+        echo "[-] Waiting for tunnel... ($i)"
         sleep 1
     fi
 done
 
-# If still not found
-if [ -z "$RDP_ADDR" ]; then
-    echo "[⚠️] Could not detect RDP address automatically. Check full logs for 'trycloudflare.com'."
+if [ -z "$RDP_DOMAIN" ]; then
+    echo "[⚠️] Still no tunnel address detected. Please check full logs."
 fi
 
-# Keep the container alive to maintain tunnel
 wait
