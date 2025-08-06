@@ -7,5 +7,8 @@ service xrdp start
 echo "[+] Sleeping 3 seconds to ensure services are up..."
 sleep 3
 
-echo "[+] Launching Cloudflared Tunnel on RDP port 3389..."
-cloudflared tunnel --url rdp://localhost:3389
+echo "[+] Checking if xrdp is listening on port 3389..."
+netstat -tulnp | grep 3389 || echo "⚠️  xrdp might not be ready!"
+
+echo "[+] Starting Cloudflared tunnel with RDP protocol..."
+cloudflared tunnel --protocol rdp --url localhost:3389
