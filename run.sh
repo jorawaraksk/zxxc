@@ -10,5 +10,5 @@ sleep 3
 echo "[+] Checking if xrdp is listening on port 3389..."
 netstat -tulnp | grep 3389 || echo "⚠️  xrdp might not be ready!"
 
-echo "[+] Starting Cloudflared tunnel with RDP protocol..."
-cloudflared tunnel --protocol rdp --url localhost:3389
+echo "[+] Starting Cloudflared tunnel (TCP mode)..."
+cloudflared tunnel --url tcp://localhost:3389
