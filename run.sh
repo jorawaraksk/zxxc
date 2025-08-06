@@ -21,16 +21,21 @@ done
 echo "[+] Launching Cloudflared tunnel (TCP mode)..."
 cloudflared tunnel --url tcp://localhost:3389 2>&1 | tee /tmp/cloudflared.log &
 
-# Wait for the tunnel to initialize
-sleep 5
+echo "[+] Waiting for Cloudflared to initialize..."
+for i in {1..15}; do
+    RDP_ADDR=$(grep -oE "tcp://trycloudflare.com:[0-9]+" /tmp/cloudflared.log | head -n 1)
+    if [ -n "$RDP_ADDR" ]; then
+        echo "[✓] 🔗 Your RDP address is: $RDP_ADDR"
+        echo "[✓] Use it in your RDP client like this: ${RDP_ADDR#tcp://}"
+        break
+    else
+        echo "[-] Tunnel not ready yet... ($i)"
+        sleep 1
+    fi
+done
 
-# Extract and display the RDP tunnel address
-RDP_ADDR=$(grep -oE "tcp://[^ ]+" /tmp/cloudflared.log | head -n 1)
-
-if [ -n "$RDP_ADDR" ]; then
-    echo "[✓] 🔗 Your RDP address is: $RDP_ADDR"
-    echo "[✓] Use it in your RDP client like this: ${RDP_ADDR#tcp://}"
-else
+# If still not found
+if [ -z "$RDP_ADDR" ]; then
     echo "[⚠️] Could not detect RDP address automatically. Check full logs for 'trycloudflare.com'."
 fi
 
