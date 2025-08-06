@@ -18,19 +18,18 @@ for i in {1..15}; do
 done
 
 echo "[+] Launching Cloudflared tunnel (TCP mode)..."
-cloudflared tunnel --url tcp://localhost:3389 --logfile /tmp/cloudflared.log &
+/usr/local/bin/cloudflared tunnel --url tcp://localhost:3389 --logfile /tmp/cloudflared.log &
 
-# Wait for tunnel to initialize
 sleep 10
 
-# Try to extract the port from Cloudflared logs
-PORT=$(grep -oE "trycloudflare\.com:[0-9]+" /tmp/cloudflared.log | tail -n 1)
+# Try to extract the TCP RDP address
+RDP_ADDRESS=$(grep -oP "trycloudflare\.com:[0-9]+" /tmp/cloudflared.log | tail -n 1)
 
-if [[ -n "$PORT" ]]; then
-    echo "[✓] 🔗 Your RDP address is: $PORT"
-    echo "[✓] Use it in your RDP client like this: $PORT"
+if [ -n "$RDP_ADDRESS" ]; then
+    echo "[✓] 🔗 RDP Address: $RDP_ADDRESS"
+    echo "[✓] ✅ Use this in RDP client → $RDP_ADDRESS"
 else
-    echo "[⚠️] Could not detect RDP address automatically. Check full logs for 'trycloudflare.com'."
+    echo "[⚠️] RDP address not found. Cloudflare may still be initializing. Try again shortly."
 fi
 
 # Keep container alive
