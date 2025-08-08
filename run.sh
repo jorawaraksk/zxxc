@@ -1,39 +1,53 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
-echo "[+] Starting virtual display..."
-Xvfb :0 -screen 0 1024x768x24 &
-export DISPLAY=:0
+echo "[+] Starting GUI environment..."
 
-echo "[+] Starting XFCE4 desktop..."
-startxfce4 &
+# Install Xvfb if missing (safety net)
+if ! command -v Xvfb >/dev/null; then
+    echo "[*] Installing Xvfb..."
+    apt-get update && apt-get install -y xvfb
+fi
 
-echo "[+] Starting XRDP server..."
+# Start virtual framebuffer for XFCE
+Xvfb :1 -screen 0 1280x720x24 &
+export DISPLAY=:1
+
+# Fix XRDP key and cert permissions
+echo "[*] Fixing XRDP certificate permissions..."
+chmod 600 /etc/xrdp/key.pem /etc/xrdp/cert.pem || true
+chown root:root /etc/xrdp/key.pem /etc/xrdp/cert.pem || true
+
+# Start XRDP & session manager
+echo "[+] Starting RDP server..."
+service xrdp-sesman start
 service xrdp start
 
+# Start XFCE desktop session
+echo "[+] Launching XFCE..."
+startxfce4 &
+
+# Start Cloudflared tunnel
 echo "[+] Starting Cloudflared tunnel..."
 cloudflared tunnel --url rdp://localhost:3389 --no-autoupdate > /tmp/cloudflared.log 2>&1 &
 
-# Wait for cloudflared to give us an address
-echo "[*] Waiting for Cloudflared RDP address..."
+# Wait for RDP address from Cloudflared logs
+echo "[+] Waiting for RDP address from Cloudflared..."
 for i in {1..60}; do
-    ADDR=$(grep -oE "https://[a-zA-Z0-9.-]+trycloudflare.com" /tmp/cloudflared.log | head -n 1)
-    if [[ -n "$ADDR" ]]; then
-        echo ""
-        echo "============================================="
-        echo "[✅] RDP Tunnel is ready!"
-        echo "    Host: ${ADDR/https:\/\//}"
-        echo "    Port: 3389"
-        echo "Use any RDP client to connect."
-        echo "============================================="
+    URL=$(grep -m1 -oE "https://[a-zA-Z0-9.-]+trycloudflare.com" /tmp/cloudflared.log || true)
+    if [ -n "$URL" ]; then
+        echo "[✓] Your RDP URL:"
+        echo "$URL"
         break
     fi
+    echo "[-] Not ready yet... ($i)"
     sleep 2
 done
 
-if [[ -z "$ADDR" ]]; then
-    echo "[❌] Failed to get RDP address from Cloudflared."
+if [ -z "$URL" ]; then
+    echo "[⚠] RDP address could not be found after waiting."
+    cat /tmp/cloudflared.log
 fi
 
-# Keep logs visible
-tail -f /var/log/xrdp-sesman.log /var/log/xrdp.log /tmp/cloudflared.log
+# Keep container alive
+tail -f /dev/null
