@@ -2,12 +2,14 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install essentials for RDP + XFCE (no cloudflared here)
+# Install essentials for RDP + XFCE + utilities
 RUN apt-get update && apt-get install -y \
     xfce4 xfce4-terminal \
     xrdp \
+    cloudflared \
     dbus-x11 x11-xserver-utils \
-    sudo curl gnupg \
+    sudo \
+    netcat-openbsd \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Cloudflared from Cloudflare's repo
