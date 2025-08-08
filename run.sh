@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo "[+] Starting dummy HTTP server on port 8080 to satisfy Render..."
-busybox httpd -f -p 8080 &
+HTTP_FILE="/var/www/html/index.html"
+mkdir -p /var/www/html
 
 echo "[+] Starting dbus and xrdp services..."
 service dbus start
@@ -20,17 +20,24 @@ done
 echo "[+] Launching Cloudflared tunnel (TCP mode)..."
 /usr/local/bin/cloudflared tunnel --url tcp://localhost:3389 --logfile /tmp/cloudflared.log &
 
-sleep 10
+sleep 12
 
-# Try to extract the TCP RDP address
+# Extract the RDP address from cloudflared log
 RDP_ADDRESS=$(grep -oP "trycloudflare\.com:[0-9]+" /tmp/cloudflared.log | tail -n 1)
 
 if [ -n "$RDP_ADDRESS" ]; then
-    echo "[✓] 🔗 RDP Address: $RDP_ADDRESS"
-    echo "[✓] ✅ Use this in RDP client → $RDP_ADDRESS"
+    echo "============================================"
+    echo "[✓] 🔗 Your RDP Address is: $RDP_ADDRESS"
+    echo "[✓] ✅ Use this in your RDP client exactly as shown"
+    echo "============================================"
+
+    # Write to Render site HTML
+    echo "<html><body><h1>✅ Your RDP Address:</h1><p style='font-size:20px;'>$RDP_ADDRESS</p></body></html>" > "$HTTP_FILE"
 else
-    echo "[⚠️] RDP address not found. Cloudflare may still be initializing. Try again shortly."
+    echo "[⚠️] Could not find RDP address in logs."
+    echo "<html><body><h1>⚠️ RDP address not ready yet. Refresh in a minute.</h1></body></html>" > "$HTTP_FILE"
 fi
 
-# Keep container alive
+# Start minimal HTTP server to keep Render alive
+busybox httpd -f -p 8080 -h /var/www/html &
 tail -f /dev/null
