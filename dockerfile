@@ -1,22 +1,16 @@
-FROM ubuntu:22.04
-ENV DEBIAN_FRONTEND=noninteractive
+FROM dorowu/ubuntu-desktop-lxde-vnc:focal
 
-# Install XRDP and XFCE
-RUN apt-get update && \
-    apt-get install -y xrdp xfce4 xfce4-goodies wget curl && \
-    apt-get clean
+# Install dependencies for cloudflared
+RUN apt-get update && apt-get install -y curl unzip && rm -rf /var/lib/apt/lists/*
 
-# Create user
-RUN useradd -m ashu && echo "ashu:1234" | chpasswd
+# Download cloudflared
+RUN curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 \
+    -o /usr/local/bin/cloudflared && chmod +x /usr/local/bin/cloudflared
 
-# Install Cloudflared
-RUN wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && \
-    dpkg -i cloudflared-linux-amd64.deb && rm cloudflared-linux-amd64.deb
-
-# Copy start script
+# Copy startup script
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
-EXPOSE 3389
+EXPOSE 6080
 
 CMD ["/start.sh"]
