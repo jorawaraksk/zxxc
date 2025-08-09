@@ -1,19 +1,10 @@
 #!/bin/bash
-set -e
 
-echo "[+] Starting XRDP service..."
+# Start XRDP
 service xrdp start
 
-echo "[+] Waiting for XRDP to be ready..."
-while ! nc -z localhost 3389; do
-    sleep 1
-done
+# Wait a moment for XRDP
+sleep 2
 
-echo "[+] Starting Cloudflared tunnel..."
-cloudflared tunnel --url tcp://localhost:3389 --no-autoupdate &
-
-echo "[+] Starting minimal HTTP server for Render health check..."
-python3 -m http.server 8080 --directory /tmp &
-
-echo "[+] All services started. Press Ctrl+C to stop."
-wait -n
+# Start Cloudflared TCP tunnel for RDP
+cloudflared tunnel --url rdp://localhost:3389 --no-autoupdate
